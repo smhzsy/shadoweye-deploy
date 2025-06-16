@@ -66,42 +66,11 @@ cd ~/shadoweye
 # Projeyi klonlama
 log "Proje klonlanıyor..."
 git clone https://github.com/smhzsy/shadoweye-web.git web || error "Web projesi klonlanamadı"
-git clone https://github.com/smhzsy/shadoweye-model.git model || error "Model projesi klonlanamadı"
 
 # Web projesi kurulumu
 log "Web projesi kuruluyor..."
 cd ~/shadoweye/web
 npm install || error "Web projesi bağımlılıkları kurulamadı"
-
-# .env dosyası oluşturma
-log ".env dosyası oluşturuluyor..."
-cat > .env << EOL
-# Database
-DATABASE_URL="postgresql://postgres:your_password@localhost:5432/shadoweye"
-
-# JWT
-JWT_SECRET="your_jwt_secret"
-
-# Telegram
-TELEGRAM_API_ID="your_api_id"
-TELEGRAM_API_HASH="your_api_hash"
-TELEGRAM_BOT_TOKEN="your_bot_token"
-TELEGRAM_CHAT_ID="your_chat_id"
-
-# Other
-NODE_ENV="production"
-EOL
-
-# Production build
-log "Production build alınıyor..."
-npm run build || error "Production build başarısız oldu"
-
-# Model projesi kurulumu
-log "Model projesi kuruluyor..."
-cd ~/shadoweye/model
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt || error "Model bağımlılıkları kurulamadı"
 
 # PostgreSQL veritabanı kurulumu
 log "PostgreSQL veritabanı kuruluyor..."
@@ -130,27 +99,6 @@ server {
 }
 EOF
 
-# Nginx konfigürasyonunu aktifleştirme
-log "Nginx konfigürasyonu aktifleştiriliyor..."
-sudo ln -sf /etc/nginx/sites-available/shadoweye.xyz /etc/nginx/sites-enabled/
-sudo nginx -t || error "Nginx konfigürasyonu hatalı"
-sudo systemctl restart nginx
-
-# SSL sertifikası alma
-log "SSL sertifikası alınıyor..."
-sudo certbot --nginx -d shadoweye.xyz -d www.shadoweye.xyz --non-interactive --agree-tos --email your@email.com
-
-# PM2 ile uygulamaları başlatma
-log "Uygulamalar PM2 ile başlatılıyor..."
-cd ~/shadoweye/web
-pm2 start npm --name "shadoweye-web" -- start
-cd ~/shadoweye/model
-pm2 start python3 --name "shadoweye-model" -- main.py
-
-# PM2 startup
-log "PM2 startup ayarlanıyor..."
-pm2 startup
-pm2 save
 
 # Güvenlik ayarları
 log "Güvenlik ayarları yapılıyor..."
@@ -174,6 +122,6 @@ sudo ufw allow http
 sudo ufw allow https
 sudo ufw --force enable
 
-log "Kurulum tamamlandı! Lütfen .env dosyasını düzenleyin ve gerekli bilgileri girin."
+log "Kurulum tamamlandı!"
 log "Web uygulaması: https://shadoweye.xyz"
 log "Model uygulaması: PM2 ile arka planda çalışıyor" 
